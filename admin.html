@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — The Rude Star</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808; --white: #f2ede4; --accent: #e8001c;
+    --gold: #d4a017; --gray: #111; --border: #1e1e1e; --muted: #666;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--black); color: var(--white); font-family: 'Syne', sans-serif; overflow: hidden; }
+
+  /* LOGIN */
+  #login-screen {
+    position: fixed; inset: 0; background: var(--black);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+  }
+  #login-screen.hidden { display: none; }
+  .login-box { width: 380px; text-align: center; }
+  .login-logo { font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 6px; color: var(--muted); margin-bottom: 8px; }
+  .login-brand { font-family: 'Bebas Neue'; font-size: 3rem; letter-spacing: 4px; margin-bottom: 40px; }
+  .login-brand span { color: var(--accent); }
+  .lf-group { margin-bottom: 16px; text-align: left; }
+  .lf-group label { font-family: 'Space Mono'; font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); display: block; margin-bottom: 7px; text-transform: uppercase; }
+  .lf-group input { width: 100%; background: #111; border: 1px solid #2a2a2a; color: var(--white); padding: 13px 16px; font-family: 'Syne'; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+  .lf-group input:focus { border-color: var(--accent); }
+  .login-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; font-family: 'Bebas Neue'; font-size: 1.2rem; letter-spacing: 4px; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
+  .login-btn:hover { background: #c0001a; }
+  .login-hint { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--muted); margin-top: 16px; }
+
+  /* MAIN LAYOUT */
+  #admin-app { display: flex; height: 100vh; }
+  
+  /* SIDEBAR */
+  .sidebar { width: 240px; background: #050505; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 22px 22px 18px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .brand { font-family: 'Bebas Neue'; font-size: 1.35rem; letter-spacing: 3px; line-height: 1.1; }
+  .sidebar-logo .brand .red { color: var(--accent); }
+  .sidebar-logo .badge { font-family: 'Space Mono'; font-size: 0.58rem; color: var(--gold); letter-spacing: 2px; background: rgba(212,160,23,0.1); padding: 3px 8px; display: inline-block; margin-top: 6px; }
+  .sidenav { padding: 14px 0; flex: 1; overflow-y: auto; }
+  .navitem {
+    display: flex; align-items: center; gap: 12px; padding: 12px 22px;
+    color: var(--muted); cursor: pointer; transition: all 0.18s;
+    font-size: 0.88rem; letter-spacing: 0.5px; border-left: 3px solid transparent;
+  }
+  .navitem:hover { color: var(--white); background: rgba(255,255,255,0.025); }
+  .navitem.active { color: var(--white); background: rgba(232,0,28,0.07); border-left-color: var(--accent); }
+  .navitem .ni { width: 18px; text-align: center; font-size: 1rem; }
+  .sidebar-footer { padding: 16px 22px; border-top: 1px solid var(--border); }
+  .back-to-store { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.8rem; text-decoration: none; transition: color 0.2s; font-family: 'Space Mono'; letter-spacing: 1px; }
+  .back-to-store:hover { color: var(--white); }
+
+  /* MAIN CONTENT */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; padding: 17px 30px; border-bottom: 1px solid var(--border); background: #050505; flex-shrink: 0; }
+  .topbar h1 { font-family: 'Bebas Neue'; font-size: 1.6rem; letter-spacing: 4px; }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+  .admin-email { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--muted); }
+  .logout-btn { background: #1a1a1a; border: none; color: var(--muted); padding: 8px 16px; cursor: pointer; font-family: 'Space Mono'; font-size: 0.65rem; letter-spacing: 1px; transition: all 0.2s; }
+  .logout-btn:hover { color: var(--white); background: #2a2a2a; }
+  .content { flex: 1; overflow-y: auto; padding: 28px 30px; }
+
+  /* TABS */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+  .scard { background: var(--gray); border: 1px solid var(--border); padding: 20px 22px; position: relative; overflow: hidden; }
+  .scard::before { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: var(--accent); }
+  .scard .num { font-family: 'Bebas Neue'; font-size: 2.2rem; color: var(--gold); line-height: 1; }
+  .scard .lbl { font-family: 'Space Mono'; font-size: 0.62rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .scard .chg { font-size: 0.72rem; color: #4ade80; margin-top: 4px; font-family: 'Space Mono'; }
+  .sec-title { font-family: 'Bebas Neue'; font-size: 1.3rem; letter-spacing: 3px; color: var(--gold); margin-bottom: 16px; }
+
+  /* TABLE */
+  .atbl { width: 100%; border-collapse: collapse; }
+  .atbl th { padding: 12px 14px; text-align: left; font-family: 'Space Mono'; font-size: 0.62rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .atbl td { padding: 14px; border-bottom: 1px solid #111; font-size: 0.88rem; vertical-align: middle; }
+  .atbl tr:hover td { background: rgba(255,255,255,0.015); }
+  .badge { display: inline-block; padding: 3px 10px; font-family: 'Space Mono'; font-size: 0.6rem; letter-spacing: 1px; }
+  .bg { background: rgba(74,222,128,0.1); color: #4ade80; }
+  .by { background: rgba(250,204,21,0.1); color: #facc15; }
+  .br { background: rgba(232,0,28,0.1); color: var(--accent); }
+  .bb { background: rgba(96,165,250,0.1); color: #60a5fa; }
+
+  /* FORMS */
+  .form-card { background: var(--gray); border: 1px solid var(--border); padding: 26px; margin-bottom: 28px; }
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .fgroup { margin-bottom: 0; }
+  .fgroup label { display: block; font-family: 'Space Mono'; font-size: 0.62rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .fgroup input, .fgroup select, .fgroup textarea {
+    width: 100%; background: #0e0e0e; border: 1px solid #2a2a2a; color: var(--white);
+    padding: 11px 14px; font-family: 'Syne'; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+  }
+  .fgroup input:focus, .fgroup select:focus, .fgroup textarea:focus { border-color: var(--accent); }
+  .fgroup select option { background: #111; }
+  .fgroup textarea { height: 80px; resize: vertical; }
+  .full { grid-column: 1/-1; }
+  .btn-a { background: var(--accent); color: white; border: none; padding: 12px 28px; font-family: 'Bebas Neue'; font-size: 1rem; letter-spacing: 3px; cursor: pointer; transition: background 0.2s; }
+  .btn-a:hover { background: #c0001a; }
+  .btn-sec { background: #1a1a1a; color: var(--muted); border: 1px solid #2a2a2a; padding: 12px 22px; font-family: 'Bebas Neue'; font-size: 0.95rem; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; margin-left: 8px; }
+  .btn-sec:hover { color: var(--white); border-color: #444; }
+
+  /* IMAGE UPLOAD */
+  .img-upload-area {
+    border: 2px dashed #2a2a2a; padding: 20px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s; background: #0e0e0e; position: relative;
+  }
+  .img-upload-area:hover { border-color: var(--accent); }
+  .img-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .img-upload-area .upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .img-upload-area p { font-family: 'Space Mono'; font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; }
+  .img-upload-area .upload-count { font-family: 'Bebas Neue'; font-size: 0.9rem; color: var(--gold); margin-top: 4px; }
+  .multi-preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .multi-img-item { position: relative; width: 80px; height: 80px; }
+  .multi-img-item img { width: 100%; height: 100%; object-fit: cover; border: 1px solid #2a2a2a; display: block; }
+  .multi-img-item.primary img { border-color: var(--gold); }
+  .multi-img-item .primary-badge { position: absolute; bottom: 0; left: 0; right: 0; background: var(--gold); color: var(--black); font-family: 'Bebas Neue'; font-size: 0.6rem; text-align: center; letter-spacing: 1px; padding: 1px 0; }
+  .multi-img-item .rm-img { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: var(--accent); color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; }
+  .multi-img-item .set-primary { position: absolute; bottom: 18px; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--muted); font-size: 0.55rem; font-family: 'Space Mono'; text-align: center; padding: 2px; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+  .multi-img-item:hover .set-primary { opacity: 1; }
+  .add-more-btn { width: 80px; height: 80px; border: 2px dashed #2a2a2a; background: #0e0e0e; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 1.4rem; transition: border-color 0.2s; position: relative; flex-shrink: 0; }
+  .add-more-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .add-more-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .add-more-btn span { font-family: 'Space Mono'; font-size: 0.55rem; color: var(--muted); margin-top: 4px; }
+
+  /* PAYMENT METHODS */
+  .pm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .pm-card { background: var(--gray); border: 1px solid var(--border); padding: 20px; position: relative; transition: border-color 0.2s; }
+  .pm-card.on { border-color: var(--accent); }
+  .pm-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .pm-name { font-family: 'Bebas Neue'; font-size: 1.15rem; letter-spacing: 2px; margin-bottom: 4px; }
+  .pm-desc { color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
+  .toggle { position: absolute; top: 16px; right: 16px; width: 40px; height: 22px; background: #2a2a2a; border-radius: 11px; cursor: pointer; transition: background 0.3s; }
+  .toggle.on { background: var(--accent); }
+  .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: left 0.3s; }
+  .toggle.on::after { left: 21px; }
+
+  /* UPI CONFIG HIGHLIGHT */
+  .upi-config-box { background: rgba(232,0,28,0.05); border: 1px solid rgba(232,0,28,0.3); padding: 28px; margin-bottom: 24px; }
+  .upi-config-box h3 { font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 3px; color: var(--accent); margin-bottom: 6px; }
+  .upi-config-box .sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 22px; }
+  .upi-preview { background: #0e0e0e; border: 1px solid #2a2a2a; padding: 16px 20px; margin-top: 16px; display: flex; align-items: center; gap: 14px; }
+  .upi-preview-icon { font-size: 1.8rem; }
+  .upi-preview-info { }
+  .upi-preview-id { font-family: 'Space Mono'; font-size: 0.85rem; color: var(--gold); }
+  .upi-preview-name { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #1a1a1a; border: 1px solid #333; border-left: 4px solid var(--accent); color: var(--white); padding: 12px 20px; font-family: 'Space Mono'; font-size: 0.75rem; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.35s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Product image in table */
+  .prod-thumb { width: 44px; height: 44px; object-fit: cover; border: 1px solid #2a2a2a; }
+  .prod-emoji { width: 44px; height: 44px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 1px solid #2a2a2a; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">ADMIN PORTAL</div>
+    <div class="login-brand">THE RUDE <span>STAR</span></div>
+    <div class="lf-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="admin@therudestar.com" value="admin@therudestar.com">
+    </div>
+    <div class="lf-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" value="rudestar123">
+    </div>
+    <button class="login-btn" onclick="doLogin()">LOGIN TO ADMIN →</button>
+    <p class="login-hint">Default: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="82e3e6efebecc2f6eae7f0f7e6e7f1f6e3f0ace1edef">[email&#160;protected]</a> / rudestar123</p>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="admin-app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">THE RUDE <span class="red">STAR</span></div>
+      <div class="badge">ADMIN PANEL</div>
+    </div>
+    <div class="sidenav">
+      <div class="navitem active" onclick="goTab('dashboard',this)"><span class="ni">📊</span> Dashboard</div>
+      <div class="navitem" onclick="goTab('products',this)"><span class="ni">👕</span> Products</div>
+      <div class="navitem" onclick="goTab('orders',this)"><span class="ni">📦</span> Orders</div>
+      <div class="navitem" onclick="goTab('customers',this)"><span class="ni">👥</span> Customers</div>
+      <div class="navitem" onclick="goTab('payments',this)"><span class="ni">💳</span> Payment Methods</div>
+      <div class="navitem" onclick="goTab('settings',this)"><span class="ni">⚙️</span> Store Settings</div>
+    </div>
+    <div class="sidebar-footer">
+      <a href="index.html" class="back-to-store">← Back to Store</a>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <h1 id="page-title">DASHBOARD</h1>
+      <div class="topbar-right">
+        <span class="admin-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8feeebe2e6e1cffbe7eafdfaebeafcfbeefda1ece0e2">[email&#160;protected]</a></span>
+        <button class="logout-btn" onclick="logout()">LOGOUT</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="tab active" id="tab-dashboard">
+        <div class="stats-row" id="dash-stats"></div>
+        <h3 class="sec-title">RECENT ORDERS</h3>
+        <table class="atbl">
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+          <tbody id="dash-orders"></tbody>
+        </table>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="tab" id="tab-products">
+        <h3 class="sec-title">ADD NEW PRODUCT</h3>
+        <div class="form-card">
+          <div class="fgrid">
+            <div class="fgroup">
+              <label>Product Name</label>
+              <input type="text" id="pn" placeholder="e.g. RUDE TEE">
+            </div>
+            <div class="fgroup">
+              <label>Price (₹)</label>
+              <input type="number" id="pp" placeholder="1299">
+            </div>
+            <div class="fgroup">
+              <label>Original Price (₹) — for strikethrough</label>
+              <input type="number" id="pop" placeholder="1599">
+            </div>
+            <div class="fgroup">
+              <label>Category</label>
+              <select id="pc">
+                <option>T-Shirt</option><option>Hoodie</option>
+                <option>Sweatshirt</option><option>Accessories</option>
+              </select>
+            </div>
+            <div class="fgroup">
+              <label>Emoji Icon (if no image)</label>
+              <input type="text" id="pe" placeholder="👕">
+            </div>
+            <div class="fgroup full">
+              <label>Product Images — Upload Multiple (First = Main Photo)</label>
+              <div class="img-upload-area" id="upload-area">
+                <input type="file" id="prod-img-input" accept="image/*" multiple onchange="addImages(this)">
+                <div class="upload-icon">🖼️</div>
+                <p>Click to upload images (JPG, PNG, WEBP)</p>
+                <div class="upload-count" id="upload-count"></div>
+              </div>
+              <div class="multi-preview-grid" id="multi-preview-grid"></div>
+            </div>
+            <div class="fgroup full">
+              <label>Description</label>
+              <textarea id="pd" placeholder="Product description..."></textarea>
+            </div>
+          </div>
+          <br>
+          <button class="btn-a" onclick="addProduct()">+ ADD PRODUCT</button>
+          <button class="btn-sec" onclick="showToast('Saved as draft')">SAVE DRAFT</button>
+        </div>
+        <h3 class="sec-title">ALL PRODUCTS (<span id="prod-count">0</span>)</h3>
+        <table class="atbl">
+          <thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="prod-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="tab" id="tab-orders">
+        <h3 class="sec-title">ALL ORDERS</h3>
+        <table class="atbl">
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Amount</th><th>Payment</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+        <p id="no-orders" style="color:var(--muted);font-family:'Space Mono';font-size:0.8rem;padding:30px 0;display:none">No orders yet. Orders from your store will appear here.</p>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div class="tab" id="tab-customers">
+        <h3 class="sec-title">CUSTOMERS</h3>
+        <table class="atbl">
+          <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Orders</th><th>Total Spent</th></tr></thead>
+          <tbody id="customers-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div class="tab" id="tab-payments">
+        <h3 class="sec-title">PAYMENT METHODS</h3>
+        <div class="pm-grid">
+          <div class="pm-card on" id="pm-upi"><div class="pm-icon">📲</div><div class="toggle on" id="tg-upi" onclick="togglePM('upi')"></div><div class="pm-name">UPI</div><div class="pm-desc">Google Pay, PhonePe, Paytm, BHIM</div></div>
+          <div class="pm-card on" id="pm-cod"><div class="pm-icon">💵</div><div class="toggle on" id="tg-cod" onclick="togglePM('cod')"></div><div class="pm-name">Cash on Delivery</div><div class="pm-desc">Pay when order arrives</div></div>
+          <div class="pm-card" id="pm-card"><div class="pm-icon">💳</div><div class="toggle" id="tg-card" onclick="togglePM('card')"></div><div class="pm-name">Credit / Debit Card</div><div class="pm-desc">Visa, Mastercard, RuPay</div></div>
+          <div class="pm-card" id="pm-nb"><div class="pm-icon">🏦</div><div class="toggle" id="tg-nb" onclick="togglePM('nb')"></div><div class="pm-name">Net Banking</div><div class="pm-desc">All major Indian banks</div></div>
+          <div class="pm-card" id="pm-emi"><div class="pm-icon">📅</div><div class="toggle" id="tg-emi" onclick="togglePM('emi')"></div><div class="pm-name">EMI</div><div class="pm-desc">No-cost EMI on orders above ₹3000</div></div>
+          <div class="pm-card" id="pm-wallet"><div class="pm-icon">👜</div><div class="toggle" id="tg-wallet" onclick="togglePM('wallet')"></div><div class="pm-name">Wallets</div><div class="pm-desc">Paytm, Mobikwik, Amazon Pay</div></div>
+        </div>
+
+        <!-- UPI CONFIG -->
+        <div class="upi-config-box">
+          <h3>📲 UPI / RAZORPAY CONFIGURATION</h3>
+          <p class="sub">Configure your UPI ID or Razorpay Payment Link. Customers will use this to pay during checkout.</p>
+          <div class="fgrid">
+            <div class="fgroup">
+              <label>Your UPI ID</label>
+              <input type="text" id="upi-id-input" placeholder="yourname@upi or 9876543210@paytm">
+            </div>
+            <div class="fgroup">
+              <label>Display Name (shown to customers)</label>
+              <input type="text" id="upi-name-input" placeholder="The Rude Star">
+            </div>
+            <div class="fgroup full">
+              <label>Razorpay Payment Link (optional — replaces UPI deeplink)</label>
+              <input type="text" id="rzp-link-input" placeholder="https://rzp.io/l/yourlink — paste your Razorpay payment link here">
+            </div>
+          </div>
+          <div class="upi-preview" id="upi-preview">
+            <div class="upi-preview-icon">📲</div>
+            <div class="upi-preview-info">
+              <div class="upi-preview-id" id="preview-id">Not configured yet</div>
+              <div class="upi-preview-name" id="preview-name">Enter your UPI ID above and save</div>
+            </div>
+          </div>
+          <br>
+          <button class="btn-a" onclick="savePaymentConfig()">SAVE PAYMENT SETTINGS</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="tab" id="tab-settings">
+        <h3 class="sec-title">STORE SETTINGS</h3>
+        <div class="form-card">
+          <div class="fgrid">
+            <div class="fgroup"><label>Store Name</label><input type="text" id="s-name" value="The Rude Star"></div>
+            <div class="fgroup"><label>Store Email</label><input type="email" id="s-email" value="info@therudestar.com"></div>
+            <div class="fgroup"><label>Phone</label><input type="text" id="s-phone" placeholder="+91 XXXXX XXXXX"></div>
+            <div class="fgroup"><label>Currency</label><select id="s-cur"><option>INR (₹)</option><option>USD ($)</option></select></div>
+            <div class="fgroup"><label>GST Number</label><input type="text" id="s-gst" placeholder="22AAAAA0000A1Z5"></div>
+            <div class="fgroup"><label>Free Shipping Above (₹)</label><input type="number" id="s-fs" value="999"></div>
+            <div class="fgroup"><label>Shipping Fee (₹)</label><input type="number" id="s-sf" value="99"></div>
+            <div class="fgroup"><label>Admin Password</label><input type="password" id="s-pwd" placeholder="New password (leave blank to keep)"></div>
+            <div class="fgroup full"><label>Store Address</label><textarea id="s-addr">Lucknow, Uttar Pradesh, India</textarea></div>
+          </div>
+          <br>
+          <button class="btn-a" onclick="saveSettings()">SAVE SETTINGS</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ===== AUTH =====
+const ADMIN_PASS = 'rudestar123';
+const ADMIN_EMAIL = 'admin@therudestar.com';
+
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  const config = JSON.parse(localStorage.getItem('trs_config') || '{}');
+  const correctPass = config.adminPass || ADMIN_PASS;
+  if (email === ADMIN_EMAIL && pass === correctPass) {
+    document.getElementById('login-screen').classList.add('hidden');
+    initAdmin();
+  } else {
+    showToast('Invalid email or password!');
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function logout() {
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+// ===== INIT =====
+function initAdmin() {
+  loadDashboard();
+  loadPaymentConfig();
+}
+
+// ===== TAB =====
+function getProducts() {
+  return JSON.parse(localStorage.getItem('trs_products') || 'null') || [
+    { id: 1, name: 'RUDE TEE', price: 1299, orig: 1599, img: null, icon: '👕', cat: 'T-Shirt' },
+    { id: 2, name: 'STAR HOODIE', price: 2499, orig: 2999, img: null, icon: '🧥', cat: 'Hoodie' },
+    { id: 3, name: 'BOLD GRAPHIC TEE', price: 1199, orig: 1499, img: null, icon: '👚', cat: 'T-Shirt' },
+    { id: 4, name: 'RUDE CAP', price: 799, orig: 999, img: null, icon: '🧢', cat: 'Accessories' },
+    { id: 5, name: 'ECHO SWEAT', price: 1999, orig: 2499, img: null, icon: '🩱', cat: 'Sweatshirt' },
+  ];
+}
+function saveProducts(p) { localStorage.setItem('trs_products', JSON.stringify(p)); }
+function getOrders() { return JSON.parse(localStorage.getItem('trs_orders') || '[]'); }
+function getConfig() { return JSON.parse(localStorage.getItem('trs_config') || '{}'); }
+function saveConfig(c) { localStorage.setItem('trs_config', JSON.stringify(c)); }
+
+// ===== MULTI IMAGE UPLOAD =====
+let currentImages = []; // [{data: base64, primary: bool}]
+
+function addImages(input) {
+  if (!input.files || !input.files.length) return;
+  const files = Array.from(input.files);
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentImages.push({ data: e.target.result, primary: currentImages.length === 0 });
+      loaded++;
+      if (loaded === files.length) renderImagePreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = ''; // allow re-upload
+}
+
+function renderImagePreviews() {
+  const grid = document.getElementById('multi-preview-grid');
+  const count = document.getElementById('upload-count');
+  count.textContent = currentImages.length + ' image' + (currentImages.length !== 1 ? 's' : '') + ' selected';
+  if (currentImages.length === 0) { grid.innerHTML = ''; return; }
+
+  grid.innerHTML = currentImages.map((img, i) => `
+    <div class="multi-img-item ${img.primary ? 'primary' : ''}">
+      <img src="${img.data}" alt="Product ${i+1}">
+      <button class="rm-img" onclick="removeImage(${i})">✕</button>
+      ${img.primary ? '<div class="primary-badge">MAIN</div>' : `<div class="set-primary" onclick="setPrimary(${i})">Set Main</div>`}
+    </div>
+  `).join('') + `
+    <div class="add-more-btn">
+      <input type="file" accept="image/*" multiple onchange="addImages(this)">
+      ➕<span>Add More</span>
+    </div>
+  `;
+}
+
+function removeImage(i) {
+  const wasPrimary = currentImages[i].primary;
+  currentImages.splice(i, 1);
+  if (wasPrimary && currentImages.length > 0) currentImages[0].primary = true;
+  renderImagePreviews();
+}
+
+function setPrimary(i) {
+  currentImages.forEach((img, j) => img.primary = (j === i));
+  renderImagePreviews();
+}
+
+function clearImage() {
+  currentImages = [];
+  document.getElementById('prod-img-input').value = '';
+  renderImagePreviews();
+  document.getElementById('upload-count').textContent = '';
+}
+function goTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.navitem').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-title').textContent = name.toUpperCase();
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'products') loadProducts();
+  if (name === 'orders') loadOrders();
+  if (name === 'customers') loadCustomers();
+  if (name === 'payments') loadPaymentConfig();
+}
+
+// ===== DASHBOARD =====
+function loadDashboard() {
+  const orders = getOrders();
+  const products = getProducts();
+  const revenue = orders.reduce((s, o) => s + (o.amount || 0), 0);
+  const customers = [...new Set(orders.map(o => o.phone))].length;
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="scard"><div class="num">₹${revenue.toLocaleString('en-IN')}</div><div class="lbl">Total Revenue</div><div class="chg">↑ Live from orders</div></div>
+    <div class="scard"><div class="num">${orders.length}</div><div class="lbl">Total Orders</div><div class="chg">${orders.filter(o=>o.status!=='Cancelled').length} active</div></div>
+    <div class="scard"><div class="num">${products.length}</div><div class="lbl">Products Live</div></div>
+    <div class="scard"><div class="num">${customers}</div><div class="lbl">Customers</div></div>
+  `;
+
+  const tbody = document.getElementById('dash-orders');
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);font-family:'Space Mono';font-size:0.75rem;padding:24px">No orders yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = orders.slice(0, 8).map(o => `
+    <tr>
+      <td style="font-family:'Space Mono';font-size:0.8rem">${o.id}</td>
+      <td>${o.name}</td>
+      <td style="color:var(--muted);font-size:0.82rem">${o.items}</td>
+      <td style="color:var(--gold);font-family:'Space Mono'">₹${(o.amount||0).toLocaleString('en-IN')}</td>
+      <td>${o.payment || '-'}</td>
+      <td><span class="badge ${o.status === 'Delivered' ? 'bg' : o.status === 'Cancelled' ? 'br' : o.status === 'Shipped' ? 'bb' : 'by'}">${o.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ===== PRODUCTS =====
+let editingId = null;
+function loadProducts() {
+  const products = getProducts();
+  document.getElementById('prod-count').textContent = products.length;
+  document.getElementById('prod-tbody').innerHTML = products.map(p => `
+    <tr>
+      <td>
+        ${p.img ? `<img class="prod-thumb" src="${p.img}" alt="${p.name}">` : `<div class="prod-emoji">${p.icon || '👕'}</div>`}
+      </td>
+      <td><strong>${p.name}</strong></td>
+      <td style="color:var(--gold);font-family:'Space Mono';font-size:0.82rem">₹${p.price}</td>
+      <td>${p.cat}</td>
+      <td><span class="badge bg">Live</span></td>
+      <td>
+        <button style="background:#1a1a1a;border:none;color:var(--muted);padding:5px 12px;cursor:pointer;font-size:0.78rem" onclick="editProduct(${p.id})">Edit</button>
+        <button style="background:rgba(232,0,28,0.1);border:1px solid rgba(232,0,28,0.2);color:var(--accent);padding:5px 12px;cursor:pointer;font-size:0.78rem;margin-left:6px" onclick="deleteProduct(${p.id})">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function previewImage(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentImgData = e.target.result;
+    document.getElementById('img-preview').src = currentImgData;
+    document.getElementById('img-preview-wrap').style.display = 'flex';
+    document.getElementById('upload-area').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function clearImage() {
+  currentImgData = null;
+  document.getElementById('prod-img-input').value = '';
+  document.getElementById('img-preview-wrap').style.display = 'none';
+  document.getElementById('upload-area').style.display = 'block';
+}
+
+function addProduct() {
+  const name = document.getElementById('pn').value.trim().toUpperCase();
+  const price = parseInt(document.getElementById('pp').value);
+  const orig = parseInt(document.getElementById('pop').value) || price + 300;
+  const cat = document.getElementById('pc').value;
+  const icon = document.getElementById('pe').value || '👕';
+  const desc = document.getElementById('pd').value;
+  if (!name || !price) { showToast('Product name and price required!'); return; }
+
+  const mainImg = currentImages.find(i => i.primary);
+  const allImgs = currentImages.map(i => i.data);
+
+  const products = getProducts();
+  if (editingId) {
+    const idx = products.findIndex(p => p.id === editingId);
+    if (idx !== -1) {
+      products[idx] = { ...products[idx], name, price, orig, cat, icon, desc,
+        img: mainImg ? mainImg.data : products[idx].img,
+        images: allImgs.length ? allImgs : products[idx].images
+      };
+    }
+    editingId = null;
+    showToast('Product updated!');
+  } else {
+    products.push({ id: Date.now(), name, price, orig, cat, icon, desc,
+      img: mainImg ? mainImg.data : null,
+      images: allImgs
+    });
+    showToast('Product added!');
+  }
+  saveProducts(products);
+  clearProductForm();
+  loadProducts();
+}
+
+function editProduct(id) {
+  const products = getProducts();
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('pn').value = p.name;
+  document.getElementById('pp').value = p.price;
+  document.getElementById('pop').value = p.orig;
+  document.getElementById('pc').value = p.cat;
+  document.getElementById('pe').value = p.icon;
+  document.getElementById('pd').value = p.desc || '';
+  // Load existing images
+  currentImages = [];
+  if (p.images && p.images.length) {
+    p.images.forEach((img, i) => currentImages.push({ data: img, primary: i === 0 }));
+  } else if (p.img) {
+    currentImages = [{ data: p.img, primary: true }];
+  }
+  renderImagePreviews();
+  editingId = id;
+  document.querySelector('.btn-a').textContent = '✓ UPDATE PRODUCT';
+  document.getElementById('tab-products').scrollIntoView({ behavior: 'smooth' });
+  showToast('Editing: ' + p.name);
+}
+
+function clearProductForm() {
+  document.getElementById('pn').value = '';
+  document.getElementById('pp').value = '';
+  document.getElementById('pop').value = '';
+  document.getElementById('pe').value = '';
+  document.getElementById('pd').value = '';
+  clearImage();
+  editingId = null;
+  document.querySelector('.btn-a').textContent = '+ ADD PRODUCT';
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  const products = getProducts().filter(p => p.id !== id);
+  saveProducts(products);
+  loadProducts();
+  showToast('Product deleted');
+}
+
+// ===== ORDERS =====
+function loadOrders() {
+  const orders = getOrders();
+  const tbody = document.getElementById('orders-tbody');
+  const noOrders = document.getElementById('no-orders');
+  if (orders.length === 0) { tbody.innerHTML = ''; noOrders.style.display = 'block'; return; }
+  noOrders.style.display = 'none';
+  tbody.innerHTML = orders.map((o, i) => `
+    <tr>
+      <td style="font-family:'Space Mono';font-size:0.78rem">${o.id}</td>
+      <td>${o.name}</td>
+      <td style="font-family:'Space Mono';font-size:0.78rem;color:var(--muted)">${o.phone}</td>
+      <td style="color:var(--muted);font-size:0.82rem;max-width:180px">${o.items}</td>
+      <td style="color:var(--gold);font-family:'Space Mono'">₹${(o.amount||0).toLocaleString('en-IN')}</td>
+      <td>${o.payment || '-'}</td>
+      <td style="font-size:0.8rem;color:var(--muted)">${o.date}</td>
+      <td>
+        <select style="background:#1a1a1a;border:1px solid #333;color:var(--white);padding:5px 8px;font-size:0.8rem" onchange="updateOrderStatus(${i}, this.value)">
+          ${['Confirmed','Processing','Shipped','Delivered','Cancelled'].map(s => `<option ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateOrderStatus(i, status) {
+  const orders = getOrders();
+  orders[i].status = status;
+  localStorage.setItem('trs_orders', JSON.stringify(orders));
+  showToast('Order status updated to: ' + status);
+}
+
+// ===== CUSTOMERS =====
+function loadCustomers() {
+  const orders = getOrders();
+  const map = {};
+  orders.forEach(o => {
+    if (!map[o.phone]) map[o.phone] = { name: o.name, phone: o.phone, addr: o.addr, orders: 0, spent: 0 };
+    map[o.phone].orders++;
+    map[o.phone].spent += (o.amount || 0);
+  });
+  const tbody = document.getElementById('customers-tbody');
+  const customers = Object.values(map);
+  if (customers.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);font-family:'Space Mono';font-size:0.75rem;padding:24px">No customers yet.</td></tr>`; return; }
+  tbody.innerHTML = customers.map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td style="font-family:'Space Mono';font-size:0.8rem;color:var(--muted)">${c.phone}</td>
+      <td style="color:var(--muted);font-size:0.82rem">${c.addr}</td>
+      <td style="color:var(--gold)">${c.orders}</td>
+      <td style="color:var(--gold);font-family:'Space Mono'">₹${c.spent.toLocaleString('en-IN')}</td>
+    </tr>
+  `).join('');
+}
+
+// ===== PAYMENTS =====
+function togglePM(id) {
+  const tg = document.getElementById('tg-' + id);
+  const card = document.getElementById('pm-' + id);
+  tg.classList.toggle('on');
+  card.classList.toggle('on');
+  showToast((tg.classList.contains('on') ? '✓ ' : '✗ ') + id.toUpperCase() + ' payments ' + (tg.classList.contains('on') ? 'enabled' : 'disabled'));
+}
+
+function loadPaymentConfig() {
+  const config = getConfig();
+  if (config.upiId) document.getElementById('upi-id-input').value = config.upiId;
+  if (config.upiName) document.getElementById('upi-name-input').value = config.upiName;
+  if (config.razorpayLink) document.getElementById('rzp-link-input').value = config.razorpayLink;
+  updateUPIPreview();
+}
+
+function updateUPIPreview() {
+  const id = document.getElementById('upi-id-input').value;
+  const name = document.getElementById('upi-name-input').value;
+  const rzpLink = document.getElementById('rzp-link-input').value;
+  document.getElementById('preview-id').textContent = rzpLink ? 'Razorpay Link: ' + rzpLink.slice(0, 40) + '...' : (id || 'Not configured');
+  document.getElementById('preview-name').textContent = name || 'The Rude Star';
+}
+
+document.getElementById('upi-id-input').addEventListener('input', updateUPIPreview);
+document.getElementById('upi-name-input').addEventListener('input', updateUPIPreview);
+document.getElementById('rzp-link-input').addEventListener('input', updateUPIPreview);
+
+function savePaymentConfig() {
+  const config = getConfig();
+  config.upiId = document.getElementById('upi-id-input').value.trim();
+  config.upiName = document.getElementById('upi-name-input').value.trim() || 'The Rude Star';
+  config.razorpayLink = document.getElementById('rzp-link-input').value.trim();
+  saveConfig(config);
+  updateUPIPreview();
+  showToast('Payment settings saved! ✓');
+}
+
+// ===== SETTINGS =====
+function saveSettings() {
+  const config = getConfig();
+  const newPass = document.getElementById('s-pwd').value;
+  if (newPass) config.adminPass = newPass;
+  config.storeName = document.getElementById('s-name').value

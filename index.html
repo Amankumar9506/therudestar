@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE RUDE STAR — Premium Streetwear</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    --black: #080808;
+    --white: #f2ede4;
+    --accent: #e8001c;
+    --gold: #d4a017;
+    --gray: #161616;
+    --muted: #777;
+    --star: #ff2244;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--black); color: var(--white); font-family: 'Syne', sans-serif; overflow-x: hidden; cursor: none; }
+  
+  /* Custom cursor */
+  .cursor { width: 12px; height: 12px; background: var(--accent); border-radius: 50%; position: fixed; pointer-events: none; z-index: 99999; transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s; }
+  .cursor-ring { width: 36px; height: 36px; border: 1px solid rgba(232,0,28,0.5); border-radius: 50%; position: fixed; pointer-events: none; z-index: 99998; transform: translate(-50%,-50%); transition: all 0.15s; }
+  body:hover .cursor { width: 8px; height: 8px; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 1000;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 48px;
+    background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .brand-logo {
+    display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none;
+  }
+  .brand-logo-text {
+    font-family: 'Bebas Neue'; font-size: 1.7rem; letter-spacing: 5px; color: var(--white);
+    line-height: 1;
+  }
+  .brand-logo-text .star { color: var(--accent); }
+  .brand-star-icon { font-size: 1.4rem; }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.78rem; letter-spacing: 2.5px; text-transform: uppercase; transition: color 0.3s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-right { display: flex; gap: 15px; align-items: center; }
+  .cart-btn {
+    background: var(--accent); color: white; border: none; padding: 10px 22px;
+    font-family: 'Bebas Neue'; font-size: 1rem; letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+  }
+  .cart-btn:hover { background: #c0001a; transform: translateY(-1px); }
+  .admin-link-btn {
+    background: transparent; color: var(--gold); border: 1px solid rgba(212,160,23,0.4);
+    padding: 10px 20px; font-family: 'Bebas Neue'; font-size: 0.9rem;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.3s; text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .admin-link-btn:hover { background: var(--gold); color: var(--black); border-color: var(--gold); }
+
+  /* HERO */
+  #hero { position: relative; height: 100vh; overflow: hidden; }
+  #three-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero-content {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start; padding: 0 8%;
+    z-index: 10;
+  }
+  .hero-eyebrow {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+    font-family: 'Space Mono'; font-size: 0.7rem; letter-spacing: 5px; color: var(--accent); text-transform: uppercase;
+    animation: fadeUp 0.8s ease forwards;
+  }
+  .hero-eyebrow::before { content: ''; display: block; width: 40px; height: 1px; background: var(--accent); }
+  .hero-title {
+    font-family: 'Bebas Neue'; font-size: clamp(5rem, 13vw, 14rem);
+    line-height: 0.88; letter-spacing: 1px;
+    animation: fadeUp 0.8s 0.15s ease both;
+  }
+  .hero-title .red { color: var(--accent); }
+  .hero-title .outline { -webkit-text-stroke: 1px rgba(255,255,255,0.3); color: transparent; }
+  .hero-sub {
+    font-size: 1rem; color: var(--muted); max-width: 380px;
+    margin: 22px 0 38px; line-height: 1.7;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+  .hero-btns { display: flex; gap: 14px; animation: fadeUp 0.8s 0.45s ease both; }
+  .btn-primary {
+    background: var(--accent); color: white; border: none;
+    padding: 16px 42px; font-family: 'Bebas Neue'; font-size: 1.2rem;
+    letter-spacing: 3px; cursor: pointer; transition: all 0.25s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 100%, 12px 100%);
+  }
+  .btn-primary:hover { background: #c0001a; transform: translateY(-3px); }
+  .btn-ghost {
+    background: transparent; color: var(--white);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 16px 42px; font-family: 'Bebas Neue'; font-size: 1.2rem;
+    letter-spacing: 3px; cursor: pointer; transition: all 0.25s;
+  }
+  .btn-ghost:hover { border-color: var(--white); }
+  .scroll-hint {
+    position: absolute; bottom: 40px; left: 8%; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'Space Mono'; font-size: 0.65rem; letter-spacing: 4px; color: var(--muted);
+    animation: fadeUp 1s 0.8s ease both;
+  }
+  .scroll-hint::after { content: ''; display: block; width: 60px; height: 1px; background: var(--muted); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* MARQUEE */
+  .marquee-wrap { background: var(--accent); padding: 12px 0; overflow: hidden; }
+  .marquee-inner { display: flex; gap: 50px; white-space: nowrap; animation: marquee 18s linear infinite; font-family: 'Bebas Neue'; font-size: 1.1rem; letter-spacing: 5px; color: white; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* PRODUCTS */
+  #products { padding: 110px 5% 80px; }
+  .sec-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 55px; }
+  .sec-title { font-family: 'Bebas Neue'; font-size: clamp(3rem, 5.5vw, 5rem); line-height: 1; }
+  .sec-title .red { color: var(--accent); }
+  .see-all { font-family: 'Space Mono'; font-size: 0.72rem; letter-spacing: 3px; color: var(--muted); border-bottom: 1px solid var(--muted); padding-bottom: 2px; cursor: pointer; }
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 24px; }
+  .product-card {
+    background: var(--gray); position: relative; overflow: hidden;
+    cursor: pointer; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .product-card:hover { transform: translateY(-10px); }
+  .product-card:hover .product-cta { opacity: 1; transform: translateY(0); }
+  .product-img {
+    width: 100%; aspect-ratio: 3/4; background: #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; }
+  .product-img .emoji-fallback { font-size: 6rem; }
+  .drop-badge {
+    position: absolute; top: 14px; left: 14px;
+    background: var(--accent); color: white;
+    font-family: 'Space Mono'; font-size: 0.6rem; letter-spacing: 2px; padding: 4px 10px;
+  }
+  .sale-badge {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--gold); color: var(--black);
+    font-family: 'Bebas Neue'; font-size: 0.9rem; letter-spacing: 1px; padding: 4px 10px;
+  }
+  .product-cta {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--accent); padding: 14px;
+    display: flex; justify-content: center;
+    opacity: 0; transform: translateY(100%); transition: all 0.3s;
+  }
+  .product-cta button {
+    background: none; border: none; color: white; font-family: 'Bebas Neue';
+    font-size: 1rem; letter-spacing: 3px; cursor: pointer; width: 100%;
+  }
+  .product-info { padding: 18px 20px; }
+  .product-name { font-family: 'Bebas Neue'; font-size: 1.25rem; letter-spacing: 2px; margin-bottom: 8px; }
+  .product-price { font-family: 'Space Mono'; color: var(--gold); font-size: 0.88rem; }
+  .product-price .original { color: var(--muted); text-decoration: line-through; margin-right: 8px; font-size: 0.78rem; }
+
+  /* FEATURE */
+  #feature { padding: 100px 5%; background: radial-gradient(ellipse at 60% 50%, #1a0005 0%, var(--black) 65%); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  #product-canvas { width: 100%; height: 480px; }
+  .feat-tag { font-family: 'Space Mono'; font-size: 0.7rem; letter-spacing: 4px; color: var(--accent); margin-bottom: 16px; }
+  .feat-title { font-family: 'Bebas Neue'; font-size: 4.5rem; line-height: 1; margin-bottom: 22px; }
+  .feat-desc { color: var(--muted); line-height: 1.8; margin-bottom: 38px; }
+  .feat-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .fstat { border-left: 2px solid var(--accent); padding-left: 18px; }
+  .fstat-n { font-family: 'Bebas Neue'; font-size: 2.4rem; color: var(--gold); }
+  .fstat-l { font-family: 'Space Mono'; font-size: 0.68rem; color: var(--muted); letter-spacing: 2px; }
+
+  /* FOOTER */
+  footer { background: #050505; padding: 60px 5% 28px; border-top: 1px solid #1a1a1a; }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+  .footer-brand .brand-logo-text { font-size: 2.2rem; margin-bottom: 14px; display: block; }
+  .footer-brand p { color: var(--muted); font-size: 0.88rem; line-height: 1.7; max-width: 280px; }
+  .fc h4 { font-family: 'Bebas Neue'; font-size: 1rem; letter-spacing: 3px; color: var(--gold); margin-bottom: 18px; }
+  .fc ul { list-style: none; }
+  .fc li { color: var(--muted); font-size: 0.83rem; margin-bottom: 10px; cursor: pointer; transition: color 0.2s; }
+  .fc li:hover { color: var(--white); }
+  .footer-btm { border-top: 1px solid #1a1a1a; padding-top: 24px; display: flex; justify-content: space-between; }
+  .footer-btm p { color: var(--muted); font-size: 0.75rem; font-family: 'Space Mono'; }
+
+  /* CART */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .cart-sidebar {
+    position: fixed; right: -460px; top: 0; width: 450px; height: 100vh;
+    background: #0f0f0f; z-index: 2001; transition: right 0.45s cubic-bezier(0.16,1,0.3,1);
+    display: flex; flex-direction: column; padding: 28px 28px 24px;
+    border-left: 1px solid #222;
+  }
+  .cart-sidebar.open { right: 0; }
+  .ch { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #222; }
+  .ch h2 { font-family: 'Bebas Neue'; font-size: 1.8rem; letter-spacing: 4px; }
+  .ch button { background: none; border: none; color: var(--white); font-size: 1.3rem; cursor: pointer; opacity: 0.6; }
+  .ch button:hover { opacity: 1; }
+  .cart-list { flex: 1; overflow-y: auto; }
+  .ci { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #1a1a1a; align-items: center; }
+  .ci-img { width: 68px; height: 68px; background: #1a1a1a; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .ci-img img { width: 100%; height: 100%; object-fit: cover; }
+  .ci-img .ci-emoji { font-size: 2rem; }
+  .ci-info { flex: 1; }
+  .ci-name { font-family: 'Bebas Neue'; font-size: 1.05rem; letter-spacing: 1px; }
+  .ci-price { color: var(--gold); font-family: 'Space Mono'; font-size: 0.78rem; margin-top: 4px; }
+  .ci-rm { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; }
+  .cf { padding-top: 18px; border-top: 1px solid #222; }
+  .cf-total { display: flex; justify-content: space-between; font-family: 'Bebas Neue'; font-size: 1.4rem; letter-spacing: 2px; margin-bottom: 18px; }
+  .cf-total span { color: var(--gold); }
+  .checkout-btn {
+    width: 100%; background: var(--accent); color: white; border: none;
+    padding: 17px; font-family: 'Bebas Neue'; font-size: 1.2rem; letter-spacing: 4px;
+    cursor: pointer; transition: background 0.25s;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 14px 100%);
+  }
+  .checkout-btn:hover { background: #c0001a; }
+  .empty-msg { text-align: center; padding: 50px 0; color: var(--muted); }
+  .empty-msg .em-icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-msg p { font-family: 'Bebas Neue'; font-size: 1.3rem; letter-spacing: 3px; }
+
+  /* CHECKOUT MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: #111; border: 1px solid #2a2a2a; padding: 40px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto; }
+  .modal-box h2 { font-family: 'Bebas Neue'; font-size: 2rem; letter-spacing: 3px; margin-bottom: 6px; }
+  .modal-box .modal-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 28px; }
+  .modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
+  .modal-close:hover { color: var(--white); }
+  .mform-group { margin-bottom: 18px; }
+  .mform-group label { display: block; font-family: 'Space Mono'; font-size: 0.65rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .mform-group input { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; color: var(--white); padding: 11px 14px; font-family: 'Syne'; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+  .mform-group input:focus { border-color: var(--accent); }
+  .pay-methods { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .pay-opt { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 1px solid #2a2a2a; cursor: pointer; transition: border-color 0.2s; }
+  .pay-opt:hover { border-color: #444; }
+  .pay-opt.selected { border-color: var(--accent); background: rgba(232,0,28,0.06); }
+  .pay-opt input[type=radio] { accent-color: var(--accent); }
+  .pay-opt-label { font-family: 'Syne'; font-size: 0.9rem; }
+  .pay-opt-icon { font-size: 1.4rem; }
+  .modal-pay-btn {
+    width: 100%; background: var(--accent); color: white; border: none;
+    padding: 16px; font-family: 'Bebas Neue'; font-size: 1.2rem; letter-spacing: 4px;
+    cursor: pointer; transition: background 0.25s;
+  }
+  .modal-pay-btn:hover { background: #c0001a; }
+  .order-summary { background: #1a1a1a; padding: 18px; margin-bottom: 24px; }
+  .order-summary h4 { font-family: 'Bebas Neue'; letter-spacing: 2px; font-size: 1rem; color: var(--gold); margin-bottom: 12px; }
+  .os-item { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+  .os-total { display: flex; justify-content: space-between; font-family: 'Bebas Neue'; font-size: 1.2rem; letter-spacing: 1px; border-top: 1px solid #2a2a2a; padding-top: 10px; margin-top: 10px; }
+  .os-total span { color: var(--gold); }
+
+  /* UPI QR */
+  .upi-box { display: none; text-align: center; padding: 20px 0; }
+  .upi-box.show { display: block; }
+  .upi-amount-display { font-family: 'Bebas Neue'; font-size: 2rem; color: var(--gold); margin-bottom: 16px; }
+  .upi-link-btn { background: var(--accent); color: white; border: none; padding: 14px 36px; font-family: 'Bebas Neue'; font-size: 1.1rem; letter-spacing: 3px; cursor: pointer; width: 100%; margin-bottom: 12px; transition: background 0.2s; }
+  .upi-link-btn:hover { background: #c0001a; }
+  .upi-id-display { font-family: 'Space Mono'; font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+  .upi-note { font-size: 0.78rem; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 28px; right: 28px; background: #1a1a1a; border: 1px solid #333; border-left: 4px solid var(--accent); color: var(--white); padding: 14px 22px; font-family: 'Space Mono'; font-size: 0.78rem; z-index: 9999; transform: translateY(100px); opacity: 0; transition: all 0.4s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 768px) {
+    nav { padding: 14px 18px; }
+    .nav-links { display: none; }
+    .hero-title { font-size: 4.5rem; }
+    #feature { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .cart-sidebar { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="brand-logo" href="index.html">
+    <span class="brand-star-icon">★</span>
+    <span class="brand-logo-text">THE RUDE <span class="star">STAR</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#products">Shop</a></li>
+    <li><a href="#">Collections</a></li>
+    <li><a href="#">Lookbook</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="openCart()">🛒 Cart (<span id="cart-count">0</span>)</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="three-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-eyebrow">New Collection 2025</div>
+    <h1 class="hero-title">
+      THE<br>
+      <span class="red">RUDE</span><br>
+      <span class="outline">STAR</span>
+    </h1>
+    <p class="hero-sub">Wear your attitude. Premium streetwear crafted for the bold and unapologetic. 100% ring-spun cotton.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now</button>
+      <button class="btn-ghost">View Lookbook</button>
+    </div>
+  </div>
+  <div class="scroll-hint">SCROLL DOWN</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    <span>THE RUDE STAR ★</span><span>PREMIUM STREETWEAR ★</span><span>WEAR YOUR ATTITUDE ★</span>
+    <span>100% COTTON ★</span><span>NEW DROP ★</span><span>THE RUDE STAR ★</span>
+    <span>PREMIUM STREETWEAR ★</span><span>WEAR YOUR ATTITUDE ★</span><span>100% COTTON ★</span>
+    <span>NEW DROP ★</span><span>THE RUDE STAR ★</span><span>PREMIUM STREETWEAR ★</span>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section id="products">
+  <div class="sec-header">
+    <h2 class="sec-title">LATEST<br><span class="red">DROPS</span></h2>
+    <span class="see-all">View All →</span>
+  </div>
+  <div class="products-grid" id="products-grid"></div>
+</section>
+
+<!-- FEATURE -->
+<section id="feature">
+  <canvas id="product-canvas"></canvas>
+  <div>
+    <div class="feat-tag">// Why The Rude Star</div>
+    <h2 class="feat-title">CRAFTED FOR THE BOLD</h2>
+    <p class="feat-desc">Every piece in our collection is a statement. Premium ring-spun cotton — heavyweight, soft, built to last. No compromise, ever.</p>
+    <div class="feat-stats">
+      <div class="fstat"><div class="fstat-n">500+</div><div class="fstat-l">Happy Customers</div></div>
+      <div class="fstat"><div class="fstat-n">100%</div><div class="fstat-l">Premium Cotton</div></div>
+      <div class="fstat"><div class="fstat-n">3–7</div><div class="fstat-l">Days Delivery</div></div>
+      <div class="fstat"><div class="fstat-n">S–2XL</div><div class="fstat-l">All Sizes</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="brand-logo-text">THE RUDE <span class="star" style="color:var(--accent)">STAR</span></span>
+      <p>Wear your attitude. Premium streetwear for the bold and unapologetic. Worldwide shipping from India.</p>
+    </div>
+    <div class="fc">
+      <h4>Shop</h4>
+      <ul><li>New Arrivals</li><li>T-Shirts</li><li>Hoodies</li><li>Accessories</li></ul>
+    </div>
+    <div class="fc">
+      <h4>Company</h4>
+      <ul><li>About Us</li><li>Sustainability</li><li>Careers</li><li>Press</li></ul>
+    </div>
+    <div class="fc">
+      <h4>Support</h4>
+      <ul><li>FAQ</li><li>Shipping Policy</li><li>Returns</li><li>Contact</li></ul>
+    </div>
+  </div>
+  <div class="footer-btm">
+    <p>© 2025 THE RUDE STAR. ALL RIGHTS RESERVED.</p>
+    <p>MADE WITH ❤️ IN INDIA</p>
+  </div>
+</footer>
+
+<!-- CART SIDEBAR -->
+<div class="overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="ch">
+    <h2>YOUR CART</h2>
+    <button onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-list" id="cart-list">
+    <div class="empty-msg" id="empty-msg">
+      <div class="em-icon">🛒</div>
+      <p>CART IS EMPTY</p>
+    </div>
+  </div>
+  <div class="cf" id="cart-footer" style="display:none">
+    <div class="cf-total">TOTAL <span id="cart-total">₹0</span></div>
+    <button class="checkout-btn" onclick="openCheckout()">PROCEED TO CHECKOUT →</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkout-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeCheckout()">✕</button>
+    <h2>CHECKOUT</h2>
+    <p class="modal-sub">Fill your details and choose payment method</p>
+
+    <div class="order-summary">
+      <h4>ORDER SUMMARY</h4>
+      <div id="os-items"></div>
+      <div class="os-total">TOTAL <span id="os-total">₹0</span></div>
+    </div>
+
+    <div class="mform-group">
+      <label>Full Name</label>
+      <input type="text" id="co-name" placeholder="Your full name">
+    </div>
+    <div class="mform-group">
+      <label>Phone Number</label>
+      <input type="tel" id="co-phone" placeholder="+91 XXXXX XXXXX">
+    </div>
+    <div class="mform-group">
+      <label>Delivery Address</label>
+      <input type="text" id="co-addr" placeholder="Street, City, State, PIN">
+    </div>
+
+    <p style="font-family:'Space Mono';font-size:0.65rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Choose Payment Method</p>
+    <div class="pay-methods">
+      <label class="pay-opt selected" id="opt-upi">
+        <input type="radio" name="pay" value="upi" checked onchange="selectPay('upi')">
+        <span class="pay-opt-icon">📲</span>
+        <span class="pay-opt-label">UPI / GPay / PhonePe / Paytm</span>
+      </label>
+      <label class="pay-opt" id="opt-cod">
+        <input type="radio" name="pay" value="cod" onchange="selectPay('cod')">
+        <span class="pay-opt-icon">💵</span>
+        <span class="pay-opt-label">Cash on Delivery (COD)</span>
+      </label>
+      <label class="pay-opt" id="opt-card">
+        <input type="radio" name="pay" value="card" onchange="selectPay('card')">
+        <span class="pay-opt-icon">💳</span>
+        <span class="pay-opt-label">Credit / Debit Card</span>
+      </label>
+    </div>
+
+    <!-- UPI PAYMENT BOX -->
+    <div class="upi-box" id="upi-box">
+      <div class="upi-amount-display" id="upi-amount-display">₹0</div>
+      <button class="upi-link-btn" id="upi-pay-btn" onclick="openUPILink()">
+        PAY VIA UPI →
+      </button>
+      <div class="upi-id-display" id="upi-id-display"></div>
+      <p class="upi-note">Click the button above to open your UPI app (GPay, PhonePe, Paytm etc.) and complete payment. After payment, click "Confirm Order" below.</p>
+    </div>
+
+    <button class="modal-pay-btn" id="pay-btn" onclick="placeOrder()">PLACE ORDER →</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CURSOR =====
+document.addEventListener('mousemove', e => {
+  document.getElementById('cursor').style.left = e.clientX + 'px';
+  document.getElementById('cursor').style.top = e.clientY + 'px';
+  document.getElementById('cursor-ring').style.left = e.clientX + 'px';
+  document.getElementById('cursor-ring').style.top = e.clientY + 'px';
+});
+
+// ===== STORE STATE =====
+let storeConfig = JSON.parse(localStorage.getItem('trs_config') || '{}');
+let products = JSON.parse(localStorage.getItem('trs_products') || 'null') || [
+  { id: 1, name: 'RUDE TEE', price: 1299, orig: 1599, img: null, icon: '👕', cat: 'T-Shirt' },
+  { id: 2, name: 'STAR HOODIE', price: 2499, orig: 2999, img: null, icon: '🧥', cat: 'Hoodie' },
+  { id: 3, name: 'BOLD GRAPHIC TEE', price: 1199, orig: 1499, img: null, icon: '👚', cat: 'T-Shirt' },
+  { id: 4, name: 'RUDE CAP', price: 799, orig: 999, img: null, icon: '🧢', cat: 'Accessories' },
+  { id: 5, name: 'ECHO SWEAT', price: 1999, orig: 2499, img: null, icon: '🩱', cat: 'Sweatshirt' },
+];
+let cart = [];
+let selectedPay = 'upi';
+const upiId = storeConfig.upiId || 'yourupi@upi';
+const upiName = storeConfig.upiName || 'The Rude Star';
+const razorpayLink = storeConfig.razorpayLink || '';
+
+// ===== RENDER PRODUCTS =====
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = products.map(p => `
+    <div class="product-card">
+      <div class="product-img">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}">` : `<div class="emoji-fallback">${p.icon}</div>`}
+        <div class="drop-badge">NEW DROP</div>
+        ${p.orig > p.price ? `<div class="sale-badge">SALE</div>` : ''}
+        <div class="product-cta"><button onclick="addToCart(${p.id}, event)">ADD TO CART</button></div>
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">
+          ${p.orig > p.price ? `<span class="original">₹${p.orig}</span>` : ''}₹${p.price}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== CART =====
+function addToCart(id, e) {
+  e.stopPropagation();
+  const p = products.find(x => x.id === id);
+  cart.push({...p});
+  updateCart();
+  showToast(`${p.name} added to cart!`);
+}
+
+function updateCart() {
+  document.getElementById('cart-count').textContent = cart.length;
+  const list = document.getElementById('cart-list');
+  const footer = document.getElementById('cart-footer');
+  const emptyMsg = document.getElementById('empty-msg');
+
+  if (cart.length === 0) {
+    emptyMsg.style.display = 'block';
+    footer.style.display = 'none';
+    list.innerHTML = '';
+    list.appendChild(emptyMsg);
+    return;
+  }
+  emptyMsg.style.display = 'none';
+  footer.style.display = 'block';
+  const total = cart.reduce((s, p) => s + p.price, 0);
+  document.getElementById('cart-total').textContent = '₹' + total.toLocaleString('en-IN');
+  list.innerHTML = cart.map((p, i) => `
+    <div class="ci">
+      <div class="ci-img">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}">` : `<span class="ci-emoji">${p.icon}</span>`}
+      </div>
+      <div class="ci-info">
+        <div class="ci-name">${p.name}</div>
+        <div class="ci-price">₹${p.price.toLocaleString('en-IN')}</div>
+      </div>
+      <button class="ci-rm" onclick="removeFromCart(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFromCart(i) { cart.splice(i, 1); updateCart(); }
+function openCart() { document.getElementById('cart-sidebar').classList.add('open'); document.getElementById('cart-overlay').classList.add('open'); }
+function closeCart() { document.getElementById('cart-sidebar').classList.remove('open'); document.getElementById('cart-overlay').classList.remove('open'); }
+
+// ===== CHECKOUT =====
+function openCheckout() {
+  if (cart.length === 0) { showToast('Cart is empty!'); return; }
+  closeCart();
+  const total = cart.reduce((s, p) => s + p.price, 0);
+  document.getElementById('os-items').innerHTML = cart.map(p => `<div class="os-item"><span>${p.name}</span><span>₹${p.price}</span></div>`).join('');
+  document.getElementById('os-total').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('upi-amount-display').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('checkout-modal').classList.add('open');
+  updateUPIBox();
+}
+
+function closeCheckout() { document.getElementById('checkout-modal').classList.remove('open'); }
+
+function selectPay(method) {
+  selectedPay = method;
+  document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById('opt-' + method).classList.add('selected');
+  updateUPIBox();
+}
+
+function updateUPIBox() {
+  const upiBox = document.getElementById('upi-box');
+  const config = JSON.parse(localStorage.getItem('trs_config') || '{}');
+  const rzLink = config.razorpayLink || '';
+  const upiIdVal = config.upiId || 'yourupi@upi';
+  const upiNameVal = config.upiName || 'The Rude Star';
+  if (selectedPay === 'upi') {
+    upiBox.classList.add('show');
+    document.getElementById('upi-id-display').textContent = 'UPI ID: ' + upiIdVal;
+    document.getElementById('pay-btn').textContent = 'CONFIRM ORDER →';
+  } else {
+    upiBox.classList.remove('show');
+    document.getElementById('pay-btn').textContent = selectedPay === 'cod' ? 'CONFIRM COD ORDER →' : 'PAY WITH CARD →';
+  }
+}
+
+function openUPILink() {
+  const config = JSON.parse(localStorage.getItem('trs_config') || '{}');
+  const total = cart.reduce((s, p) => s + p.price, 0);
+  const rzLink = config.razorpayLink || '';
+  const upiIdVal = config.upiId || '';
+  const upiNameVal = config.upiName || 'The Rude Star';
+
+  if (rzLink) {
+    window.open(rzLink, '_blank');
+  } else if (upiIdVal) {
+    const upiURL = `upi://pay?pa=${upiIdVal}&pn=${encodeURIComponent(upiNameVal)}&am=${total}&cu=INR&tn=${encodeURIComponent('The Rude Star Order')}`;
+    window.location.href = upiURL;
+  } else {
+    showToast('UPI not configured. Check Admin → Payment Settings.');
+  }
+}
+
+function placeOrder() {
+  const name = document.getElementById('co-name').value.trim();
+  const phone = document.getElementById('co-phone').value.trim();
+  const addr = document.getElementById('co-addr').value.trim();
+  if (!name || !phone || !addr) { showToast('Please fill all delivery details!'); return; }
+  
+  const orderId = 'TRS-' + Date.now().toString().slice(-6);
+  const total = cart.reduce((s, p) => s + p.price, 0);
+  
+  // Save order
+  const orders = JSON.parse(localStorage.getItem('trs_orders') || '[]');
+  orders.unshift({
+    id: orderId, name, phone, addr,
+    items: cart.map(p => p.name).join(', '),
+    amount: total,
+    payment: selectedPay.toUpperCase(),
+    status: selectedPay === 'cod' ? 'Confirmed' : 'Pending Payment',
+    date: new Date().toLocaleDateString('en-IN')
+  });
+  localStorage.setItem('trs_orders', JSON.stringify(orders));
+
+  cart = [];
+  updateCart();
+  closeCheckout();
+  showToast(`Order ${orderId} placed! 🎉`);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== THREE.JS HERO =====
+(function() {
+  const canvas = document.getElementById('three-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(3000 * 3);
+  for (let i = 0; i < 3000 * 3; i++) positions[i] = (Math.random() - 0.5) * 22;
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xe8001c, size: 0.018, transparent: true, opacity: 0.55 }));
+  scene.add(pts);
+
+  // Floating star shapes
+  const stars = [];
+  for (let i = 0; i < 6; i++) {
+    const g = new THREE.OctahedronGeometry(0.3 + Math.random() * 0.5, 0);
+    const m = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xe8001c : 0xd4a017, wireframe: true, transparent: true, opacity: 0.25 });
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 9, (Math.random() - 0.5) * 4 - 3);
+    mesh.userData = { rx: Math.random() * 0.012, ry: Math.random() * 0.012, vy: (Math.random() - 0.5) * 0.004 };
+    scene.add(mesh);
+    stars.push(mesh);
+  }
+
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => { mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2; });
+  function animate() {
+    requestAnimationFrame(animate);
+    pts.rotation.x += 0.0002; pts.rotation.y += 0.0003;
+    camera.position.x += (mx * 0.25 - camera.position.x) * 0.05;
+    camera.position.y += (-my * 0.25 - camera.position.y) * 0.05;
+    stars.forEach(s => {
+      s.rotation.x += s.userData.rx; s.rotation.y += s.userData.ry;
+      s.position.y += s.userData.vy;
+      if (s.position.y > 6) s.position.y = -6;
+      if (s.position.y < -6) s.position.y = 6;
+    });
+    renderer.render(scene, camera);
+  }
+  animate();
+  window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+})();
+
+// ===== THREE.JS FEATURE =====
+(function() {
+  const canvas = document.getElementById('product-canvas');
+  if (!canvas) return;
+  const w = canvas.parentElement.clientWidth, h = 480;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(w, h);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 100);
+  camera.position.set(0, 0, 4);
+  const geo = new THREE.TorusKnotGeometry(1.2, 0.35, 128, 32);
+  const mat = new THREE.MeshBasicMaterial({ color: 0xe8001c, wireframe: true, transparent: true, opacity: 0.65 });
+  const knot = new THREE.Mesh(geo, mat);
+  scene.add(knot);
+  const sg = new THREE.OctahedronGeometry(0.7, 0);
+  const sm = new THREE.MeshBasicMaterial({ color: 0xd4a017, wireframe: true, transparent: true, opacity: 0.4 });
+  scene.add(new THREE.Mesh(sg, sm));
+  const star = scene.children[1];
+  function animate() { requestAnimationFrame(animate); knot.rotation.x += 0.005; knot.rotation.y += 0.008; star.rotation.y -= 0.01; renderer.render(scene, camera); }
+  animate();
+})();
+
+// Init
+renderProducts();
+</script>
+</body>
+</html>
